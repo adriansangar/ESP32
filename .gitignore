@@ -50,3 +50,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# PlatformIO
+VSCODE/ESP32HelloWorld/.pio
+VSCODE/ESP32HelloWorld/.vscode/
+VSCODE/ESP32HelloWorld/.vscode/.browse.c_cpp.db*
+VSCODE/ESP32HelloWorld/.vscode/c_cpp_properties.json
+VSCODE/ESP32HelloWorld/.vscode/launch.json
+VSCODE/ESP32HelloWorld/.vscode/ipch
+
