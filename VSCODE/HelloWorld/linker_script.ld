@@ -6,11 +6,12 @@ MEMORY {
 }
 
 SECTIONS {
-    .iram1.vectors : {
-        *(.iram1.vectors)
+    .iram1.vectors : ALIGN(4) {
+        *(.iram1.vectors.literal)
+        KEEP(*(.iram1.vectors))
     } > iram
 
-    .text : {
+    .text : ALIGN(4) {
         *(.text .text.*)
     } > iram
 
