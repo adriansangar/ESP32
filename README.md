@@ -60,3 +60,8 @@ Compile the project with ninja.
 Generate the .elf file in the build/ folder.
 
 Compare the output with idf.py build -v to ensure consistency.
+
+## 17.04.2025
+
+Today i figured out that my python code done the last day does not work properly so I am going to start another folder, and another process.
+First of all, i check out that the compiler is installed properly with the following command 'xtensa-esp32-elf-gcc --version'. Positive response.
