@@ -46,7 +46,7 @@ def flash_esp32(port, baud, boot_bin, partition_table_bin, app_bin):
     run_esptool_command([
         "--port", port,
         "--baud", str(baud),
-        "write_flash", "-z", "0x10000", app_bin
+        "write_flash", "-z", "0x12000", app_bin
     ])                                                                                                
 
     print("¡Flasheo completado!")
