@@ -4,52 +4,41 @@ import time
 import sys
 import os
 
-def enter_bootloader(port, baud):
-    """Forzar modo bootloader manipulando RTS/EN y DTR/BOOT."""
-    ser = serial.Serial(port, baud, timeout=1)       # Abrir puerto serie
-    ser.setRTS(False); ser.setDTR(False)             # EN=0, BOOT=0
-    time.sleep(0.1)
-    ser.setRTS(True)                                 # EN=1, BOOT=0 → bootloader
-    time.sleep(0.1)
-    ser.close()
+def enter_bootloader(port):
+    """Secuencia precisa para entrar en modo bootloader (GPIO0 LOW + RESET)."""
+    with serial.Serial(port, 115200) as ser:
+        ser.dtr = False    # GPIO0 = LOW (modo bootloader)
+        ser.rts = True     # EN = LOW (reset)
+        time.sleep(0.1)
+        ser.rts = False    # EN = HIGH
+        time.sleep(0.5)    # Tiempo para estabilizar
 
 def run_esptool_command(args):
-    """Ejecuta esptool.py con los argumentos dados y comprueba errores."""
+    """Ejecuta esptool.py con manejo de errores mejorado."""
     cmd = [sys.executable, "-m", "esptool"] + args
-    print("Ejecutando:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
+    print("[CMD] " + " ".join(cmd))
+    try:
+        subprocess.run(cmd, check=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        print("Error: Tiempo de espera agotado")
+        sys.exit(1)
 
-def flash_esp32(port, baud, boot_bin, partition_table_bin, app_bin):
-    # 1. Entrada al bootloader
-    enter_bootloader(port, baud)                          # :contentReference[oaicite:6]{index=6}
-
-    # 2. Borrar la flash completa
-    run_esptool_command([
-        "--port", port,
-        "erase_flash"
-    ])                                                      # :contentReference[oaicite:7]{index=7}
-        # 3. Escribir el binario en la dirección 0x1000
-    run_esptool_command([
-        "--port", port,
-        "--baud", str(baud),
-        "write_flash", "-z", "0x1000", boot_bin
-    ])  
-
-        # 3. Escribir el binario en la dirección 0x1000
+def flash_esp32(port, baud, boot_bin, partition_bin, app_bin):
+    # 1. Forzar modo bootloader
+    enter_bootloader(port)
+    
+    # 2. Flashear TODOS los binarios en UN solo comando
     run_esptool_command([
         "--port", port,
         "--baud", str(baud),
-        "write_flash", "-z", "0x8000", partition_table_bin
-    ])    
-
-    # 3. Escribir el binario en la dirección 0x1000
-    run_esptool_command([
-        "--port", port,
-        "--baud", str(baud),
-        "write_flash", "-z", "0x12000", app_bin
-    ])                                                                                                
-
-    print("¡Flasheo completado!")
+        "--after", "hard_reset",  # Reinicio automático al final
+        "write_flash",
+        "--flash_size", "4MB",
+        "--flash_mode", "dio",
+        "0x1000", boot_bin,
+        "0x8000", partition_bin,
+        "0x10000", app_bin
+    ])
 
 if __name__ == "__main__":
     import argparse
